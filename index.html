@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview IFrame Component - Documentation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            margin: 2rem 0;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: #34495e;
+            margin: 1.5rem 0 1rem 0;
+            font-size: 1.3rem;
+        }
+
+        .demo-container {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .attributes-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .attributes-table th,
+        .attributes-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .attributes-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .attributes-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        code:not([class]) {
+            background: #f1f2f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+
+        .code-block {
+            position: relative;
+            margin: 1rem 0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .copy-btn:hover {
+            opacity: 1;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+
+        .feature-card h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>&lt;preview-iframe&gt;</h1>
+            <p class="subtitle">A powerful web component for embedding and controlling iframe content</p>
+        </header>
+
+        <div class="section">
+            <h2>Overview</h2>
+            <p>The <code>preview-iframe</code> component is a custom web component that extends the functionality of standard iframes with additional features like lazy loading, zoom controls, fullscreen support, and loading states.</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🚀 Lazy Loading</h4>
+                    <p>Load content only when needed using Intersection Observer</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔍 Zoom Controls</h4>
+                    <p>Built-in zoom in/out functionality</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📺 Fullscreen</h4>
+                    <p>Toggle fullscreen mode with a single click</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Loading States</h4>
+                    <p>Visual feedback during content loading</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🛡️ Security</h4>
+                    <p>Built-in URL sanitization and sandbox support</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Responsive</h4>
+                    <p>Adapts to different screen sizes</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Installation</h2>
+            <p>Include the component script in your HTML file:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-html">&lt;script type="module" src="preview-iframe.js"&gt;&lt;/script&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Basic Usage</h2>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-html">&lt;preview-iframe
+  src="https://example.com"
+  width="100%"
+  height="600"
+  loading="lazy"
+  show-controls="true"
+&gt;&lt;/preview-iframe&gt;</code></pre>
+            </div>
+
+            <div class="demo-container">
+                <h3>Live Demo</h3>
+                <preview-iframe
+                    src="https://example.com"
+                    width="100%"
+                    height="400"
+                    loading="eager"
+                    show-controls="true"
+                    sandbox="allow-scripts allow-same-origin"
+                    style="--background-color: #f8f9fa;"
+                ></preview-iframe>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Attributes</h2>
+            <table class="attributes-table">
+                <thead>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>src</code></td>
+                        <td>string</td>
+                        <td>-</td>
+                        <td>URL of the content to load in the iframe</td>
+                    </tr>
+                    <tr>
+                        <td><code>width</code></td>
+                        <td>string</td>
+                        <td>100%</td>
+                        <td>Width of the component</td>
+                    </tr>
+                    <tr>
+                        <td><code>height</code></td>
+                        <td>string</td>
+                        <td>400px</td>
+                        <td>Height of the component</td>
+                    </tr>
+                    <tr>
+                        <td><code>loading</code></td>
+                        <td>string</td>
+                        <td>lazy</td>
+                        <td>Loading behavior: "lazy" or "eager"</td>
+                    </tr>
+                    <tr>
+                        <td><code>sandbox</code></td>
+                        <td>string</td>
+                        <td>-</td>
+                        <td>Sandbox restrictions for the iframe</td>
+                    </tr>
+                    <tr>
+                        <td><code>allow</code></td>
+                        <td>string</td>
+                        <td>-</td>
+                        <td>Feature policy for the iframe</td>
+                    </tr>
+                    <tr>
+                        <td><code>show-controls</code></td>
+                        <td>boolean</td>
+                        <td>false</td>
+                        <td>Show/hide the control buttons</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Advanced Examples</h2>
+            
+            <h3>With Custom Styling</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-html">&lt;preview-iframe
+  src="https://codepen.io"
+  width="100%"
+  height="500"
+  show-controls="true"
+  sandbox="allow-scripts allow-same-origin allow-forms"
+  style="--background-color: #1e1e1e; border-radius: 12px;"
+&gt;&lt;/preview-iframe&gt;</code></pre>
+            </div>
+
+            <h3>Lazy Loading with Intersection Observer</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-html">&lt;preview-iframe
+  src="https://example.com"
+  width="100%"
+  height="600"
+  loading="lazy"
+  show-controls="true"
+&gt;&lt;/preview-iframe&gt;</code></pre>
+            </div>
+
+            <div class="info">
+                <strong>Note:</strong> When using <code>loading="lazy"</code>, the iframe content will only load when the component enters the viewport, improving page performance.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>JavaScript API</h2>
+            
+            <h3>Methods</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-javascript">// Get reference to the component
+const previewIframe = document.querySelector('preview-iframe');
+
+// Set custom content
+previewIframe.setContent('&lt;h1&gt;Hello World&lt;/h1&gt;&lt;p&gt;Custom content&lt;/p&gt;');
+
+// Listen for events
+previewIframe.addEventListener('preview-loaded', () => {
+  console.log('Content loaded successfully');
+});
+
+previewIframe.addEventListener('preview-error', () => {
+  console.error('Error loading content');
+});</code></pre>
+            </div>
+
+            <h3>Custom Events</h3>
+            <table class="attributes-table">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Description</th>
+                        <th>When Fired</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>preview-loaded</code></td>
+                        <td>Fired when iframe content loads successfully</td>
+                        <td>On iframe load event</td>
+                    </tr>
+                    <tr>
+                        <td><code>preview-error</code></td>
+                        <td>Fired when iframe content fails to load</td>
+                        <td>On iframe error event</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>CSS Custom Properties</h2>
+            <p>Customize the appearance using CSS custom properties:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-css">preview-iframe {
+  --background-color: #f8f9fa; /* Background color of the iframe */
+}
+
+/* Or inline */</code></pre>
+            </div>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-html">&lt;preview-iframe
+  style="--background-color: #1a1a1a;"
+  src="https://example.com"
+&gt;&lt;/preview-iframe&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Security Considerations</h2>
+            
+            <div class="warning">
+                <strong>Important:</strong> Always use appropriate <code>sandbox</code> attributes when loading external content to prevent security issues.
+            </div>
+
+            <h3>Recommended Sandbox Settings</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="language-html">&lt;!-- For static content --&gt;
+&lt;preview-iframe
+  sandbox="allow-same-origin"
+  src="https://trusted-site.com"
+&gt;&lt;/preview-iframe&gt;
+
+&lt;!-- For interactive content --&gt;
+&lt;preview-iframe
+  sandbox="allow-scripts allow-same-origin allow-forms"
+  src="https://trusted-interactive-site.com"
+&gt;&lt;/preview-iframe&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Browser Support</h2>
+            <p>This component uses modern web standards and requires:</p>
+            <ul>
+                <li>Custom Elements v1</li>
+                <li>Shadow DOM v1</li>
+                <li>ES6+ JavaScript features</li>
+                <li>Intersection Observer API (for lazy loading)</li>
+            </ul>
+            
+            <div class="info">
+                <strong>Supported Browsers:</strong> Chrome 54+, Firefox 63+, Safari 10.1+, Edge 79+
+            </div>
+        </div>
+    </div>
+
+    <!-- Include the component files -->
+    <script type="text/javascript" src="https://blobs.vusercontent.net/blob/script-iGgzdtlrFFDR1PG4tgkCRfHLky3CEH.js"></script>
+    
+    <!-- PrismJS for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <script>
+        // Copy code functionality
+        function copyCode(button) {
+            const codeBlock = button.nextElementSibling.querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.background = '#27ae60';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#3498db';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        // Demo event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const demoIframe = document.querySelector('preview-iframe');
+            
+            if (demoIframe) {
+                demoIframe.addEventListener('preview-loaded', () => {
+                    console.log('Demo iframe loaded successfully');
+                });
+                
+                demoIframe.addEventListener('preview-error', () => {
+                    console.error('Demo iframe failed to load');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
