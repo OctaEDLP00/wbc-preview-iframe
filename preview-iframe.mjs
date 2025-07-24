@@ -12,7 +12,7 @@
  * ></preview-iframe>
  * ```
  */
-export class PreviewIframe extends HTMLElement {
+class PreviewIframe extends HTMLElement {
   /** @type {HTMLIFrameElement | null | undefined} */
   #iframe;
   /** @type {HTMLButtonElement | null | undefined} */
