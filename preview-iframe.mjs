@@ -359,7 +359,7 @@ class PreviewIframe extends HTMLElement {
    * @return {void}
    */
   #applyZoom() {
-    console.log(this.#currentZoom)
+    // console.log(this.#currentZoom)
     if (this.#iframe == null) return
     this.#iframe.style.transform = `scale(${this.#currentZoom})`;
     this.#updateZoomDisplay();
