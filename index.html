@@ -80,7 +80,7 @@
                     loading="eager"
                     show-controls="true"
                     sandbox="allow-scripts allow-same-origin"
-                    style="--background-color: #f8f9fa;"
+                    style="--bg-color-light: #f8f9fa;"
                 ></preview-iframe>
             </div>
         </div>
@@ -161,7 +161,7 @@
   height="500"
   show-controls="true"
   sandbox="allow-scripts allow-same-origin allow-forms"
-  style="--background-color: #1e1e1e"
+  style="--bg-color-dark: #1e1e1e"
 &gt;&lt;/preview-iframe&gt;</code></pre>
             </div>
 
@@ -237,7 +237,8 @@ preview.setContent('<h1>Hello World!!</h1>')</code></pre>
             <div class="code-block">
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 <pre><code class="language-css">preview-iframe {
-  --background-color: #f8f9fa; /* Background color of the iframe */
+  --bg-color-light: #f8f9fa; /* Background color of the iframe */
+  --bg-color-dark: #131313; /* Background color of the iframe */
 }
 
 /* Or inline */</code></pre>
@@ -246,8 +247,8 @@ preview.setContent('<h1>Hello World!!</h1>')</code></pre>
             <div class="code-block">
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 <pre><code class="language-html">&lt;preview-iframe
-  style="--background-color: #1a1a1a;"
-  src="https://example.com"
+  style="--bg-color-dark: #1a1a1a;"
+  src="https://github.com/OctaEDLP00/wbc-preview-iframe"
 &gt;&lt;/preview-iframe&gt;</code></pre>
             </div>
         </div>

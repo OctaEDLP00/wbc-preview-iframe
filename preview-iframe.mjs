@@ -5,29 +5,29 @@
  * @example A simple usage
  * ```html
  * <preview-iframe
- *   src="https://ejemplo.com",
+ *   src="https://github.com/OctaEDLP00/wbc-preview-iframe",
  *   width="100%"
  *   height="800"
- *   style="--background-color: #1e1e1e;"
+ *   style="--bg-color-dark: #1e1e1e;"
  * ></preview-iframe>
  * ```
  */
 export class PreviewIframe extends HTMLElement {
-  /** @type {HTMLIFrameElement | null} */
+  /** @type {HTMLIFrameElement | null | undefined} */
   #iframe;
-  /** @type {HTMLButtonElement | null} */
+  /** @type {HTMLButtonElement | null | undefined} */
   #zoomInBtn;
-  /** @type {HTMLButtonElement | null} */
+  /** @type {HTMLButtonElement | null | undefined} */
   #zoomOutBtn;
-  /** @type {HTMLButtonElement | null} */
+  /** @type {HTMLButtonElement | null | undefined} */
   #fullscreenBtn;
-  /** @type {HTMLDivElement | null} */
+  /** @type {HTMLDivElement | null | undefined} */
   #container;
-  /** @type {HTMLDivElement | null} */
+  /** @type {HTMLDivElement | null | undefined} */
   #controls;
-  /** @type {HTMLDivElement | null} */
+  /** @type {HTMLDivElement | null | undefined} */
   #zoomDisplay;
-  /** @type {IntersectionObserver | null} */
+  /** @type {IntersectionObserver | null | undefined} */
   #observer = null;
   /** @type {boolean} */
   #isContentLoaded = false;
@@ -176,8 +176,9 @@ export class PreviewIframe extends HTMLElement {
    */
   disconnectedCallback() {
     this.observer?.disconnect();
-    this.iframe.removeEventListener('load', this.#onIframeLoad);
-    this.iframe.removeEventListener('error', this.#onIframeError);
+    if (this.#iframe == null) return
+    this.#iframe.removeEventListener('load', this.#onIframeLoad);
+    this.#iframe.removeEventListener('error', this.#onIframeError);
   }
 
   /**
@@ -185,40 +186,42 @@ export class PreviewIframe extends HTMLElement {
    */
   #setupElements() {
     /**
-     * @type {HTMLIFrameElement | null}
+     * @type {HTMLIFrameElement | null | undefined}
      */
     this.#iframe = this.shadowRoot?.querySelector('iframe');
     /**
-     * @type {HTMLButtonElement | null}
+     * @type {HTMLButtonElement | null | undefined}
      */
     this.#zoomInBtn = this.shadowRoot?.querySelector('.zoom-in');
     /**
-     * @type {HTMLButtonElement | null}
+     * @type {HTMLButtonElement | null | undefined}
      */
     this.#zoomOutBtn = this.shadowRoot?.querySelector('.zoom-out');
     /**
-     * @type {HTMLButtonElement | null}
+     * @type {HTMLButtonElement | null | undefined}
      */
     this.#fullscreenBtn = this.shadowRoot?.querySelector('.fullscreen');
     /**
-     * @type {HTMLDivElement | null}
+     * @type {HTMLDivElement | null | undefined}
      */
     this.#container = this.shadowRoot?.querySelector('.container');
     /**
-     * @type {HTMLDivElement | null}
+     * @type {HTMLDivElement | null | undefined}
      */
     this.#controls = this.shadowRoot?.querySelector('.controls');
     /**
-     * @type {HTMLDivElement | null}
+     * @type {HTMLDivElement | null | undefined}
      */
     this.#zoomDisplay = this.shadowRoot?.querySelector('.zoom-display');
 
     // Configuración inicial
     if (this.hasAttribute('show-controls')) {
+      if (this.#controls == null) return
       this.#controls.style.opacity = this.getAttribute('show-controls') === 'true' ? '1' : '0';
     }
 
     if (this.hasAttribute('show-zoom-level')) {
+      if (this.#zoomDisplay == null) return
       this.#zoomDisplay.style.display = this.getAttribute('show-zoom-level') === 'true' ? 'block' : 'none';
     }
   }
@@ -227,20 +230,27 @@ export class PreviewIframe extends HTMLElement {
    * @return {void}
    */
   #setupEvents() {
+    if (this.#zoomInBtn == null) return
     this.#zoomInBtn.addEventListener('click', () => this.#zoom(1.1));
+    if (this.#zoomOutBtn == null) return
     this.#zoomOutBtn.addEventListener('click', () => this.#zoom(0.9));
+    if (this.#fullscreenBtn == null) return
     this.#fullscreenBtn.addEventListener('click', () => this.#toggleFullscreen());
 
+    if (this.#controls == null) return
     this.#controls.addEventListener('mouseenter', () => {
+      if (this.#controls == null) return
       this.#controls.style.opacity = '1';
     });
 
     this.#controls.addEventListener('mouseleave', () => {
       if (this.getAttribute('show-controls') !== 'true') {
+        if (this.#controls == null) return
         this.#controls.style.opacity = '0';
       }
     });
 
+    if (this.#iframe == null) return
     this.#iframe.addEventListener('load', this.#onIframeLoad.bind(this));
     this.#iframe.addEventListener('error', this.#onIframeError.bind(this));
   }
@@ -258,10 +268,12 @@ export class PreviewIframe extends HTMLElement {
    * @return {void}
    */
   #onIframeError() {
+    if (this.shadowRoot == null) return
     /**
-     * @type {HTMLDivElement}
+     * @type {HTMLDivElement | null}
      */
     const errorMessage = this.shadowRoot.querySelector('.error-message');
+    if (errorMessage == null) return
     errorMessage.textContent = 'Error loading content';
     errorMessage.style.display = 'block';
     this.#hideLoader();
@@ -279,6 +291,7 @@ export class PreviewIframe extends HTMLElement {
         if (entry.isIntersecting && !this.isContentLoaded) {
           const src = this.getAttribute('src');
           if (src) {
+            if (this.#iframe == null) return
             this.#showLoader();
             this.#iframe.src = this.#sanitizeSrc(src);
           }
@@ -303,6 +316,7 @@ export class PreviewIframe extends HTMLElement {
       case 'src':
         if (newValue && this.getAttribute('loading') !== 'lazy') {
           this.#showLoader();
+          if (this.#iframe == null) return
           this.#iframe.src = this.#sanitizeSrc(newValue);
         }
         break;
@@ -335,7 +349,7 @@ export class PreviewIframe extends HTMLElement {
    * @return {void}
    */
   #setInitialZoom() {
-    const initialZoom = parseFloat(this.getAttribute('initial-zoom')) || 1.0;
+    const initialZoom = parseFloat(this.getAttribute('initial-zoom') ?? '') || 1.0;
     this.#currentZoom = initialZoom;
     this.#applyZoom();
   }
@@ -346,6 +360,7 @@ export class PreviewIframe extends HTMLElement {
    */
   #applyZoom() {
     console.log(this.#currentZoom)
+    if (this.#iframe == null) return
     this.#iframe.style.transform = `scale(${this.#currentZoom})`;
     this.#updateZoomDisplay();
   }
@@ -411,6 +426,8 @@ export class PreviewIframe extends HTMLElement {
    * @return {void}
    */
   #showLoader() {
+    if (this.shadowRoot == null) return
+    /** @type {HTMLElement | null} */
     const loader = this.shadowRoot.querySelector('.loader');
     if (loader) loader.style.display = 'block';
   }
@@ -420,6 +437,8 @@ export class PreviewIframe extends HTMLElement {
    * @return {void}
    */
   #hideLoader() {
+    if (this.shadowRoot == null) return
+    /** @type {HTMLElement | null} */
     const loader = this.shadowRoot.querySelector('.loader');
     if (loader) loader.style.display = 'none';
   }
