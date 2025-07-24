@@ -44,16 +44,28 @@ export class PreviewIframe extends HTMLElement {
    * @return {Array<string>}
    */
   static get observedAttributes() {
-    return ['src', 'width', 'height', 'sandbox', 'allow', 'loading', 'show-controls', 'initial-zoom', 'show-zoom-level'];
+    return [
+      'allow',
+      'height',
+      'initial-zoom',
+      'loading',
+      'sandbox',
+      'show-controls',
+      'show-zoom-level',
+      'src',
+      'width'
+    ];
   }
 
   /**
    * @return {string}
    */
   static get styles() {
-    return `
+    return /* css */`
       :host {
-        --background-color: var(--bg-color);
+        color-scheme: light dark;
+        --bg-color-light: #f8f9fa;
+        --bg-color-dark: #131313;
         display: block;
         border: 1px solid #ddd;
         border-radius: 4px;
@@ -71,7 +83,7 @@ export class PreviewIframe extends HTMLElement {
         width: 100%;
         height: 100%;
         border: none;
-        background: var(--background-color, white);
+        background: light-dark(var(--bg-color-light), var(--bg-color-dark));
       }
 
       .controls {
@@ -100,7 +112,7 @@ export class PreviewIframe extends HTMLElement {
       }
 
       button:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.2);
       }
 
       .zoom-display {
@@ -135,7 +147,7 @@ export class PreviewIframe extends HTMLElement {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        color: #d9534f;
+        color: #e80e0e;
         text-align: center;
         z-index: 5;
       }
@@ -155,7 +167,7 @@ export class PreviewIframe extends HTMLElement {
     this.#setupElements();
     this.#setupEvents();
     this.#setupIntersectionObserver();
-    this.#setSandboxAttributes();
+    this.setSandboxAttributes();
     this.#setInitialZoom();
   }
 
@@ -300,7 +312,7 @@ export class PreviewIframe extends HTMLElement {
         break;
       case 'sandbox':
       case 'allow':
-        this.#setSandboxAttributes();
+        this.setSandboxAttributes();
         break;
       case 'show-controls':
         if (this.#controls) {
@@ -419,14 +431,15 @@ export class PreviewIframe extends HTMLElement {
    */
   setContent(content) {
     this.#showLoader();
-    this.iframe.srcdoc = content;
+    if (this.#iframe == null) return
+    this.#iframe.srcdoc = content;
   }
 
   /**
    * Set sandbox attributes from element attributes
    * @return {void}
    */
-  #setSandboxAttributes() {
+  setSandboxAttributes() {
     const sandbox = this.getAttribute('sandbox');
     const allow = this.getAttribute('allow');
 
@@ -444,6 +457,7 @@ export class PreviewIframe extends HTMLElement {
    * @return {void}
    */
   render() {
+    if (this.shadowRoot == null) return
     this.shadowRoot.innerHTML = `
       <style>${PreviewIframe.styles}</style>
       <div class="container">
@@ -559,4 +573,4 @@ export class PreviewIframe extends HTMLElement {
   }
 }
 
-customElements.define('preview-iframe', PreviewIframe);
+customElements.define('preview-iframe', PreviewIframe)

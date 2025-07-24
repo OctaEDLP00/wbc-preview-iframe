@@ -1,1 +1,1 @@
-import "./preview-iframe.js";
+import "./preview-iframe.mjs";
