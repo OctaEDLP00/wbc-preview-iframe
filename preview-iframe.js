@@ -1,55 +1,71 @@
 /**
- * 
+ * Web Component for displaying content previews with zoom controls
  * @class PreviewIframe
- * @extends HTMLElement
+ * @extends {HTMLElement}
  * @example A simple usage
  * ```html
  * <preview-iframe
- *   src="https://ejemplo.com",
+ *   src="https://github.com/OctaEDLP00/wbc-preview-iframe",
  *   width="100%"
  *   height="800"
- *   style="--background-color: #1e1e1e;"
+ *   style="--bg-color-dark: #1e1e1e;"
  * ></preview-iframe>
  * ```
  */
-export class PreviewIframe extends HTMLElement {
-  /** @type {HTMLIFrameElement | null} */
-  #iframe
-  /** @type {HTMLButtonElement | null} */
-  #zoomInBtn
-  /** @type {HTMLButtonElement | null} */
-  #zoomOutBtn
-  /** @type {HTMLButtonElement | null} */
-  #fullscreenBtn
-  /** @type {HTMLDivElement | null} */
-  #container
-  /** @type {HTMLDivElement | null} */
-  #controls
-  /** @type {IntersectionObserver | null} */
+class PreviewIframe extends HTMLElement {
+  /** @type {HTMLIFrameElement | null | undefined} */
+  #iframe;
+  /** @type {HTMLButtonElement | null | undefined} */
+  #zoomInBtn;
+  /** @type {HTMLButtonElement | null | undefined} */
+  #zoomOutBtn;
+  /** @type {HTMLButtonElement | null | undefined} */
+  #fullscreenBtn;
+  /** @type {HTMLDivElement | null | undefined} */
+  #container;
+  /** @type {HTMLDivElement | null | undefined} */
+  #controls;
+  /** @type {HTMLDivElement | null | undefined} */
+  #zoomDisplay;
+  /** @type {IntersectionObserver | null | undefined} */
   #observer = null;
   /** @type {boolean} */
   #isContentLoaded = false;
+  /** @type {number} */
+  #currentZoom = 1.0;
 
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.#render();
+    this.render();
   }
 
   /**
    * @return {Array<string>}
    */
   static get observedAttributes() {
-    return ['src', 'width', 'height', 'sandbox', 'allow', 'loading', 'show-controls'];
+    return [
+      'allow',
+      'height',
+      'initial-zoom',
+      'loading',
+      'sandbox',
+      'show-controls',
+      'show-zoom-level',
+      'src',
+      'width'
+    ];
   }
 
   /**
    * @return {string}
    */
   static get styles() {
-    return `
+    return /* css */`
       :host {
-        --background-color: var(--bg-color);
+        color-scheme: light dark;
+        --bg-color-light: #f8f9fa;
+        --bg-color-dark: #131313;
         display: block;
         border: 1px solid #ddd;
         border-radius: 4px;
@@ -67,7 +83,7 @@ export class PreviewIframe extends HTMLElement {
         width: 100%;
         height: 100%;
         border: none;
-        background: var(--background-color, white);
+        background: light-dark(var(--bg-color-light), var(--bg-color-dark));
       }
 
       .controls {
@@ -76,8 +92,6 @@ export class PreviewIframe extends HTMLElement {
         right: 10px;
         display: flex;
         gap: 5px;
-        opacity: 0;
-        transition: opacity 0.3s;
         z-index: 10;
 
         &.zoom-it, .zoom-out, .fullscreen {
@@ -85,10 +99,6 @@ export class PreviewIframe extends HTMLElement {
           align-items: center;
           justify-content: center;
         }
-      }
-
-      :host(:hover) .controls:hover {
-        opacity: 1;
       }
 
       button {
@@ -99,6 +109,18 @@ export class PreviewIframe extends HTMLElement {
         padding: 5px 10px;
         cursor: pointer;
         font-size: 14px;
+      }
+
+      button:hover {
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .zoom-display {
+        color: white;
+        padding: 0 8px;
+        font-size: 12px;
+        min-width: 40px;
+        text-align: center;
       }
 
       .loader {
@@ -125,7 +147,7 @@ export class PreviewIframe extends HTMLElement {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        color: #d9534f;
+        color: #e80e0e;
         text-align: center;
         z-index: 5;
       }
@@ -145,16 +167,18 @@ export class PreviewIframe extends HTMLElement {
     this.#setupElements();
     this.#setupEvents();
     this.#setupIntersectionObserver();
-    this.#setSandboxAttributes();
+    this.setSandboxAttributes();
+    this.#setInitialZoom();
   }
 
   /**
    * @return {void}
    */
   disconnectedCallback() {
-    this.observer?.disconnect();
-    this.iframe.removeEventListener('load', this.#onIframeLoad);
-    this.iframe.removeEventListener('error', this.#onIframeError);
+    this.#observer?.disconnect();
+    if (this.#iframe == null) return
+    this.#iframe.removeEventListener('load', this.#onIframeLoad);
+    this.#iframe.removeEventListener('error', this.#onIframeError);
   }
 
   /**
@@ -162,33 +186,43 @@ export class PreviewIframe extends HTMLElement {
    */
   #setupElements() {
     /**
-     * @type {HTMLIFrameElement}
+     * @type {HTMLIFrameElement | null | undefined}
      */
-    this.iframe = this.shadowRoot?.querySelector('iframe');
+    this.#iframe = this.shadowRoot?.querySelector('iframe');
     /**
-     * @type {HTMLButtonElement}
+     * @type {HTMLButtonElement | null | undefined}
      */
-    this.zoomInBtn = this.shadowRoot?.querySelector('.zoom-in');
+    this.#zoomInBtn = this.shadowRoot?.querySelector('.zoom-in');
     /**
-     * @type {HTMLButtonElement}
+     * @type {HTMLButtonElement | null | undefined}
      */
-    this.zoomOutBtn = this.shadowRoot?.querySelector('.zoom-out');
+    this.#zoomOutBtn = this.shadowRoot?.querySelector('.zoom-out');
     /**
-     * @type {HTMLButtonElement}
+     * @type {HTMLButtonElement | null | undefined}
      */
-    this.fullscreenBtn = this.shadowRoot?.querySelector('.fullscreen');
+    this.#fullscreenBtn = this.shadowRoot?.querySelector('.fullscreen');
     /**
-     * @type {HTMLDivElement}
+     * @type {HTMLDivElement | null | undefined}
      */
-    this.container = this.shadowRoot?.querySelector('.container');
+    this.#container = this.shadowRoot?.querySelector('.container');
     /**
-     * @type {HTMLDivElement}
+     * @type {HTMLDivElement | null | undefined}
      */
-    this.controls = this.shadowRoot?.querySelector('.controls');
+    this.#controls = this.shadowRoot?.querySelector('.controls');
+    /**
+     * @type {HTMLDivElement | null | undefined}
+     */
+    this.#zoomDisplay = this.shadowRoot?.querySelector('.zoom-display');
 
     // Configuración inicial
     if (this.hasAttribute('show-controls')) {
-      this.controls.style.opacity = this.getAttribute('show-controls') === 'true' ? '1' : '0';
+      if (this.#controls == null) return
+      this.#controls.style.opacity = this.getAttribute('show-controls') === 'true' ? '1' : '0';
+    }
+
+    if (this.hasAttribute('show-zoom-level')) {
+      if (this.#zoomDisplay == null) return
+      this.#zoomDisplay.style.display = this.getAttribute('show-zoom-level') === 'true' ? 'block' : 'none';
     }
   }
 
@@ -196,12 +230,29 @@ export class PreviewIframe extends HTMLElement {
    * @return {void}
    */
   #setupEvents() {
-    this.zoomInBtn.addEventListener('click', () => this.#zoom(1.1));
-    this.zoomOutBtn.addEventListener('click', () => this.#zoom(0.9));
-    this.fullscreenBtn.addEventListener('click', () => this.#toggleFullscreen());
+    if (this.#zoomInBtn == null) return
+    this.#zoomInBtn.addEventListener('click', () => this.#zoom(1.1));
+    if (this.#zoomOutBtn == null) return
+    this.#zoomOutBtn.addEventListener('click', () => this.#zoom(0.9));
+    if (this.#fullscreenBtn == null) return
+    this.#fullscreenBtn.addEventListener('click', () => this.#toggleFullscreen());
 
-    this.iframe.addEventListener('load', this.#onIframeLoad.bind(this));
-    this.iframe.addEventListener('error', this.#onIframeError.bind(this));
+    if (this.#controls == null) return
+    this.#controls.addEventListener('mouseenter', () => {
+      if (this.#controls == null) return
+      this.#controls.style.opacity = '1';
+    });
+
+    this.#controls.addEventListener('mouseleave', () => {
+      if (this.getAttribute('show-controls') !== 'true') {
+        if (this.#controls == null) return
+        this.#controls.style.opacity = '0';
+      }
+    });
+
+    if (this.#iframe == null) return
+    this.#iframe.addEventListener('load', this.#onIframeLoad.bind(this));
+    this.#iframe.addEventListener('error', this.#onIframeError.bind(this));
   }
 
   /**
@@ -217,10 +268,12 @@ export class PreviewIframe extends HTMLElement {
    * @return {void}
    */
   #onIframeError() {
+    if (this.shadowRoot == null) return
     /**
-     * @type {HTMLDivElement}
+     * @type {HTMLDivElement | null}
      */
     const errorMessage = this.shadowRoot.querySelector('.error-message');
+    if (errorMessage == null) return
     errorMessage.textContent = 'Error loading content';
     errorMessage.style.display = 'block';
     this.#hideLoader();
@@ -233,26 +286,27 @@ export class PreviewIframe extends HTMLElement {
   #setupIntersectionObserver() {
     if (this.getAttribute('loading') !== 'lazy') return;
 
-    this.observer = new IntersectionObserver((entries) => {
+    this.#observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting && !this.isContentLoaded) {
+        if (entry.isIntersecting && !this.#isContentLoaded) {
           const src = this.getAttribute('src');
           if (src) {
+            if (this.#iframe == null) return
             this.#showLoader();
-            this.iframe.src = this.#sanitizeSrc(src);
+            this.#iframe.src = this.#sanitizeSrc(src);
           }
-          this.observer?.disconnect();
+          this.#observer?.disconnect();
         }
       });
     });
 
-    this.observer.observe(this);
+    this.#observer.observe(this);
   }
 
   /**
-   * @param {string}
-   * @param {string | null}
-   * @param {string | null}
+   * @param {string} name
+   * @param {string | null} oldValue
+   * @param {string | null} newValue
    * @return {void}
    */
   attributeChangedCallback(name, oldValue, newValue) {
@@ -261,8 +315,9 @@ export class PreviewIframe extends HTMLElement {
     switch (name) {
       case 'src':
         if (newValue && this.getAttribute('loading') !== 'lazy') {
-          this.showLoader();
-          this.iframe.src = this.#sanitizeSrc(newValue);
+          this.#showLoader();
+          if (this.#iframe == null) return
+          this.#iframe.src = this.#sanitizeSrc(newValue);
         }
         break;
       case 'width':
@@ -271,29 +326,76 @@ export class PreviewIframe extends HTMLElement {
         break;
       case 'sandbox':
       case 'allow':
-        this.#setSandboxAttributes();
+        this.setSandboxAttributes();
         break;
       case 'show-controls':
-        if (this.controls) {
-          this.controls.style.opacity = newValue === 'true' ? '1' : '0';
+        if (this.#controls) {
+          this.#controls.style.opacity = newValue === 'true' ? '1' : '0';
+        }
+        break;
+      case 'initial-zoom':
+        this.#setInitialZoom();
+        break;
+      case 'show-zoom-level':
+        if (this.#zoomDisplay) {
+          this.#zoomDisplay.style.display = newValue === 'true' ? 'block' : 'none';
         }
         break;
     }
   }
 
   /**
-   * @param {number} factor
+   * Set initial zoom level from attribute
    * @return {void}
    */
-  #zoom(factor) {
-    const currentZoom = parseFloat(this.iframe.style.zoom) || 1;
-    this.iframe.style.zoom = `${currentZoom * factor}`;
+  #setInitialZoom() {
+    const initialZoom = parseFloat(this.getAttribute('initial-zoom') ?? '') || 1.0;
+    this.#currentZoom = initialZoom;
+    this.#applyZoom();
   }
 
   /**
+   * Apply zoom transformation to iframe
+   * @return {void}
+   */
+  #applyZoom() {
+    // console.log(this.#currentZoom)
+    if (this.#iframe == null) return
+    this.#iframe.style.transform = `scale(${this.#currentZoom})`;
+    this.#updateZoomDisplay();
+  }
+
+  /**
+   * Update the zoom level display
+   * @return {void}
+   */
+  #updateZoomDisplay() {
+    if (this.#zoomDisplay) {
+      this.#zoomDisplay.textContent = `${Math.round(this.#currentZoom * 100)}%`;
+    }
+  }
+
+  /**
+   * Zoom in/out by specified factor
+   * @param {number} factor - Zoom factor (e.g., 1.1 for zoom in, 0.9 for zoom out)
+   * @return {void}
+   */
+  #zoom(factor) {
+    this.#currentZoom *= factor;
+    this.#currentZoom = Math.max(0.1, Math.min(5.0, this.#currentZoom));
+    this.#applyZoom();
+    this.dispatchEvent(new CustomEvent('zoom-changed', {
+      detail: { zoomLevel: this.#currentZoom },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
+  /**
+   * Toggle fullscreen mode
    * @return {Promise<void>}
    */
-  async #toggleFullscreen()  {
+  async #toggleFullscreen() {
     try {
       if (!document.fullscreenElement) {
         await this.requestFullscreen();
@@ -306,71 +408,75 @@ export class PreviewIframe extends HTMLElement {
   }
 
   /**
+   * Basic URL sanitization
    * @param {string} src
    * @return {string}
    */
   #sanitizeSrc(src) {
-    // Implementación básica de sanitización
-    // En producción, usa una librería como DOMPurify
     try {
       new URL(src);
       return src;
     } catch {
-      return '';
+      return 'about:blank';
     }
   }
 
   /**
+   * Show loading spinner
    * @return {void}
    */
   #showLoader() {
-    /**
-     * @type {HTMLDivElement}
-     */
-    const loader = this.shadowRoot?.querySelector('.loader');
-    loader.style.display = 'block';
+    if (this.shadowRoot == null) return
+    /** @type {HTMLElement | null} */
+    const loader = this.shadowRoot.querySelector('.loader');
+    if (loader) loader.style.display = 'block';
   }
 
   /**
+   * Hide loading spinner
    * @return {void}
    */
   #hideLoader() {
-    /**
-     * @type {HTMLDivElement}
-     */
-    const loader = this.shadowRoot?.querySelector('.loader');
-    loader.style.display = 'none';
+    if (this.shadowRoot == null) return
+    /** @type {HTMLElement | null} */
+    const loader = this.shadowRoot.querySelector('.loader');
+    if (loader) loader.style.display = 'none';
   }
 
   /**
+   * Set iframe content directly
    * @param {string} content
    * @return {void}
    */
   setContent(content) {
     this.#showLoader();
-    this.iframe.srcdoc = content;
+    if (this.#iframe == null) return
+    this.#iframe.srcdoc = content;
   }
 
   /**
+   * Set sandbox attributes from element attributes
    * @return {void}
    */
-  #setSandboxAttributes() {
+  setSandboxAttributes() {
     const sandbox = this.getAttribute('sandbox');
     const allow = this.getAttribute('allow');
 
-    if (sandbox) {
-      this.iframe.sandbox.value = sandbox;
+    if (sandbox && this.#iframe) {
+      this.#iframe.sandbox.value = sandbox;
     }
 
-    if (allow) {
-      this.iframe.allow = allow;
+    if (allow && this.#iframe) {
+      this.#iframe.allow = allow;
     }
   }
 
   /**
+   * Render component HTML
    * @return {void}
    */
-  #render() {
+  render() {
+    if (this.shadowRoot == null) return
     this.shadowRoot.innerHTML = `
       <style>${PreviewIframe.styles}</style>
       <div class="container">
@@ -378,31 +484,112 @@ export class PreviewIframe extends HTMLElement {
         <div class="error-message" style="display: none;"></div>
         <iframe loading="${this.getAttribute('loading') || 'lazy'}"></iframe>
         <div class="controls">
-          <button class="zoom-in">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0-14 0m4 0h6m-3-3v6m11 8l-6-6"/></svg>
-      
-            <!-- 
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14m-7-7v14"/></svg>
-            -->
+          <div class="zoom-display" style="display: ${this.hasAttribute('show-zoom-level') ? 'block' : 'none'}">100%</div>
+          <button class='zoom-in' title="Zoom In">
+            <svg width='32' height='32'>
+              <use href='#maximize'></use>
+            </svg>
           </button>
-          <button class="zoom-out">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0-14 0m4 0h6m8 11l-6-6"/></svg>  
-
-            <!-- 
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14"/></svg>
-            -->
+          <button class='zoom-out' title="Zoom Out">
+            <svg width='32' height='32' viewBox='0 0 24 24'>
+              <use href='#minimize'></use>
+            </svg>
           </button>
-          <button class="fullscreen">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2m8-16h2a2 2 0 0 1 2 2v2m-4 12h2a2 2 0 0 0 2-2v-2"/></svg>
-
-            <!-- 
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3"/></svg>
-            -->
+          <button class='fullscreen' title="Fullscreen">
+            <svg width='32' height='32' viewBox='0 0 24 24'>
+              <use href='#fullscreen'></use>
+            </svg>
           </button>
         </div>
+      </div>
+      <div hidden class='svg-sprite-container'>
+        <svg xmlns='http://www.w3.org/2000/svg'>
+          <!-- Maximize -->
+          <symbol
+            id='maximize'
+            viewBox='0 0 24 24'
+          >
+            <path
+              fill='none'
+              stroke='currentColor'
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              stroke-width='1.5'
+              d='M3 10a7 7 0 1 0 14 0a7 7 0 1 0-14 0m4 0h6m-3-3v6m11 8l-6-6'
+            />
+          </symbol>
+          <symbol
+            id='maximize-2'
+            viewBox='0 0 24 24'
+          >
+            <path
+              fill='none'
+              stroke='currentColor'
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              stroke-width='1.5'
+              d='M5 12h14m-7-7v14'
+            />
+          </symbol>
+          <!-- Minimize -->
+          <symbol
+            id='minimize'
+            viewBox='0 0 24 24'
+          >
+            <path
+              fill='none'
+              stroke='currentColor'
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              stroke-width='1.5'
+              d='M3 10a7 7 0 1 0 14 0a7 7 0 1 0-14 0m4 0h6m8 11l-6-6'
+            />
+          </symbol>
+          <symbol
+            id='minimize-2'
+            viewBox='0 0 24 24'
+          >
+            <path
+              fill='none'
+              stroke='currentColor'
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              stroke-width='1.5'
+              d='M5 12h14'
+            />
+          </symbol>
+          <!-- Fullscreen -->
+          <symbol
+            id='fullscreen'
+            viewBox='0 0 24 24'
+          >
+            <path
+
+              fill='none'
+              stroke='currentColor'
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              stroke-width='1.5'
+              d='M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2m8-16h2a2 2 0 0 1 2 2v2m-4 12h2a2 2 0 0 0 2-2v-2'
+            />
+          </symbol>
+          <symbol
+            id='fullscreen-2'
+            viewBox='0 0 24 24'
+          >
+            <path
+              fill='none'
+              stroke='currentColor'
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              stroke-width='1.5'
+              d='M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3'
+            />
+          </symbol>
+        </svg>
       </div>
     `;
   }
 }
 
-customElements.define('preview-iframe', PreviewIframe);
+customElements.define('preview-iframe', PreviewIframe)

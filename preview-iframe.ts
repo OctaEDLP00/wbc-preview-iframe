@@ -1,19 +1,47 @@
+/**
+ * Web Component for displaying content previews with zoom controls
+ * @class PreviewIframe
+ * @extends {HTMLElement}
+ * @example A simple usage
+ * ```html
+ * <preview-iframe
+ *   src="https://github.com/OctaEDLP00/wbc-preview-iframe",
+ *   width="100%"
+ *   height="800"
+ *   style="--bg-color-dark: #1e1e1e;"
+ * ></preview-iframe>
+ * ```
+ */
 export class PreviewIframe extends HTMLElement {
-  private iframe!: HTMLIFrameElement;
-  private zoomInBtn!: HTMLButtonElement;
-  private zoomOutBtn!: HTMLButtonElement;
-  private fullscreenBtn!: HTMLButtonElement;
-  private container!: HTMLDivElement;
-  private controls!: HTMLDivElement;
+  private iframe: HTMLIFrameElement | null | undefined;
+  private zoomInBtn: HTMLButtonElement | null | undefined;
+  private zoomOutBtn: HTMLButtonElement | null | undefined;
+  private fullscreenBtn: HTMLButtonElement | null | undefined;
+  private container: HTMLDivElement | null | undefined;
+  private controls: HTMLDivElement | null | undefined;
   private observer: IntersectionObserver | null = null;
   private isContentLoaded = false;
 
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.render();
+  }
+
   static get observedAttributes(): string[] {
-    return ['src', 'width', 'height', 'sandbox', 'allow', 'loading', 'show-controls'];
+    return [
+      'src',
+      'width',
+      'height',
+      'sandbox',
+      'allow',
+      'loading',
+      'show-controls'
+    ];
   }
 
   static get styles(): string {
-    return `
+    return /* css */`
       :host {
         display: block;
         border: 1px solid #ddd;
@@ -83,12 +111,6 @@ export class PreviewIframe extends HTMLElement {
     `;
   }
 
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-    this.render();
-  }
-
   connectedCallback(): void {
     this.setupElements();
     this.setupEvents();
@@ -97,7 +119,9 @@ export class PreviewIframe extends HTMLElement {
   }
 
   disconnectedCallback(): void {
-    this.observer?.disconnect();
+    if (this.observer == null) return
+    this.observer.disconnect();
+    if (this.iframe == null) return
     this.iframe.removeEventListener('load', this.onIframeLoad);
     this.iframe.removeEventListener('error', this.onIframeError);
   }
@@ -116,8 +140,9 @@ export class PreviewIframe extends HTMLElement {
     }
   }
 
-  private render(): void {
-    this.shadowRoot!.innerHTML = `
+  render(): void {
+    if (this.shadowRoot == null) return
+    this.shadowRoot.innerHTML = `
       <style>${PreviewIframe.styles}</style>
       <div class="container">
         <div class="loader" style="display: none;"></div>
@@ -133,10 +158,14 @@ export class PreviewIframe extends HTMLElement {
   }
 
   private setupEvents(): void {
+    if (this.zoomInBtn == null) return
     this.zoomInBtn.addEventListener('click', () => this.zoom(1.1));
+    if (this.zoomOutBtn == null) return
     this.zoomOutBtn.addEventListener('click', () => this.zoom(0.9));
+    if (this.fullscreenBtn == null) return
     this.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
 
+    if (this.iframe == null) return
     this.iframe.addEventListener('load', this.onIframeLoad.bind(this));
     this.iframe.addEventListener('error', this.onIframeError.bind(this));
   }
@@ -164,6 +193,7 @@ export class PreviewIframe extends HTMLElement {
           const src = this.getAttribute('src');
           if (src) {
             this.showLoader();
+            if (this.iframe == null) return
             this.iframe.src = this.sanitizeSrc(src);
           }
           this.observer?.disconnect();
@@ -181,6 +211,7 @@ export class PreviewIframe extends HTMLElement {
       case 'src':
         if (newValue && this.getAttribute('loading') !== 'lazy') {
           this.showLoader();
+          if (this.iframe == null) return
           this.iframe.src = this.sanitizeSrc(newValue);
         }
         break;
@@ -201,6 +232,7 @@ export class PreviewIframe extends HTMLElement {
   }
 
   private zoom(factor: number): void {
+    if (this.iframe == null) return
     const currentZoom = parseFloat(this.iframe.style.zoom) || 1;
     this.iframe.style.zoom = `${currentZoom * factor}`;
   }
@@ -240,12 +272,15 @@ export class PreviewIframe extends HTMLElement {
 
   public setContent(content: string): void {
     this.showLoader();
+    if (this.iframe == null) return
     this.iframe.srcdoc = content;
   }
 
   private setSandboxAttributes(): void {
     const sandbox = this.getAttribute('sandbox');
     const allow = this.getAttribute('allow');
+
+    if (this.iframe == null) return
 
     if (sandbox) {
       this.iframe.sandbox.value = sandbox;
